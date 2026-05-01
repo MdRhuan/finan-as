@@ -1,16 +1,16 @@
-
-
 ## Plano: Migrar todas as 16 páginas restantes para React + Lovable Cloud
 
 ### Situação atual
+
 - **Portados**: Dashboard, Companies, Employees, Documents, Tasks, OrgChart (6 páginas)
 - **Faltam**: 16 páginas referenciadas na sidebar que ainda levam a 404
 
 ### Estratégia de banco de dados
 
 As páginas legadas usam IndexedDB (`db.config.get('chave')`) como key-value store. Para migrar sem criar 16 tabelas individuais, vou usar uma **tabela genérica `user_config`** para as páginas que guardam dados em JSON (seguros, imóveis, valuations, personal docs, health plans, assessores, despesas, investimentos), e tabelas dedicadas para fiscal/legal/billing que têm estrutura relacional.
-
+aSasASasASasASasAS
 **Migração 1 — tabela `user_config`** (key-value JSONB por usuário):
+
 ```sql
 CREATE TABLE user_config (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -25,6 +25,7 @@ CREATE TABLE user_config (
 ```
 
 **Migração 2 — tabela `fiscal_docs`** (para Fiscal Tax, Jurídico, Trademarks, Acordo Gaveta, Tax Planning, CheckBox):
+
 ```sql
 CREATE TABLE fiscal_docs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -46,6 +47,7 @@ CREATE TABLE fiscal_docs (
 ```
 
 **Migração 3 — tabela `transacoes`** (para Billing):
+
 ```sql
 CREATE TABLE transacoes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -94,12 +96,15 @@ CREATE TABLE transacoes (
 | `/tools/audit` | `AuditLog.tsx` | `user_config` ou tabela dedicada |
 
 ### Para cada página
+
 1. Criar `src/features/{domain}/api.ts` com funções CRUD usando Supabase
 2. Criar `src/pages/{PageName}.tsx` portando a UI legada para React + shadcn + Tailwind
 3. Registrar rota protegida em `App.tsx`
 
 ### Padrão de componente
+
 Cada página segue o padrão já estabelecido:
+
 - `AppLayout` wrapper com título
 - `useQuery` / `useMutation` do React Query
 - Dialog do shadcn para formulários
@@ -107,6 +112,7 @@ Cada página segue o padrão já estabelecido:
 - Toast para feedback
 
 ### Ordem de execução
+
 1. Criar as 3 migrações SQL (user_config, fiscal_docs, transacoes)
 2. Criar helper genérico `src/features/config/api.ts` para CRUD no user_config
 3. Batch 1 — 7 páginas personal
@@ -115,5 +121,5 @@ Cada página segue o padrão já estabelecido:
 6. Atualizar `App.tsx` com todas as 16 rotas
 
 ### Nota sobre o build error
-O erro `dist upload failed: generate R2 credentials` é um timeout temporário do serviço de deploy (Cloudflare R2), não do código. Se resolver sozinho na próxima build; não requer alteração de código.
 
+O erro `dist upload failed: generate R2 credentials` é um timeout temporário do serviço de deploy (Cloudflare R2), não do código. Se resolver sozinho na próxima build; não requer alteração de código.
