@@ -1,29 +1,6 @@
-@import "tailwindcss";
-
-@theme {
-  --font-sans: "Space Grotesk", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-
-  --color-bg:        #080C14;
-  --color-surface:   #0D1220;
-  --color-card:      #111827;
-  --color-border:    #1E2D40;
-  --color-border-hi: #00F5D4;
-
-  --color-cyan:      #00F5D4;
-  --color-cyan-dim:  rgba(0,245,212,0.12);
-  --color-cyan-glow: rgba(0,245,212,0.25);
-  --color-green:     #10B981;
-  --color-green-dim: rgba(16,185,129,0.15);
-  --color-red:       #F43F5E;
-  --color-red-dim:   rgba(244,63,94,0.15);
-  --color-amber:     #F59E0B;
-  --color-blue:      #3B82F6;
-
-  --color-text:      #E2E8F0;
-  --color-muted:     #64748B;
-  --color-faint:     #334155;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   * { box-sizing: border-box; }
