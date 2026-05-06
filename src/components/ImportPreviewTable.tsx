@@ -2,122 +2,78 @@ import { AlertCircle } from 'lucide-react';
 import type { PreviewImportacao } from '../types';
 import { formatarMoeda } from '../utils/formatCurrency';
 import { useStore } from '../store/useStore';
+import { DateInput } from './DateInput';
 
-interface ImportPreviewTableProps {
+interface Props {
   preview: PreviewImportacao[];
-  onChange: (preview: PreviewImportacao[]) => void;
+  onChange: (p: PreviewImportacao[]) => void;
 }
 
-export function ImportPreviewTable({ preview, onChange }: ImportPreviewTableProps) {
+export function ImportPreviewTable({ preview, onChange }: Props) {
   const categorias = useStore((s) => s.categorias);
 
-  const toggleSelecionada = (idx: number) => {
+  const toggle = (i: number) => {
     const novo = [...preview];
-    novo[idx] = { ...novo[idx], selecionada: !novo[idx].selecionada };
+    novo[i] = { ...novo[i], selecionada: !novo[i].selecionada };
+    onChange(novo);
+  };
+  const toggleAll = (v: boolean) => onChange(preview.map((p) => ({ ...p, selecionada: p.erro ? false : v })));
+  const setCampo = <K extends keyof PreviewImportacao>(i: number, k: K, v: PreviewImportacao[K]) => {
+    const novo = [...preview];
+    novo[i] = { ...novo[i], [k]: v };
     onChange(novo);
   };
 
-  const toggleTodas = (val: boolean) => {
-    onChange(preview.map((p) => ({ ...p, selecionada: p.erro ? false : val })));
-  };
-
-  const atualizarCampo = (idx: number, campo: keyof PreviewImportacao, valor: string) => {
-    const novo = [...preview];
-    novo[idx] = { ...novo[idx], [campo]: valor };
-    onChange(novo);
-  };
-
-  const selecionadas = preview.filter((p) => p.selecionada).length;
+  const sel = preview.filter((p) => p.selecionada).length;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">
-          <span className="font-semibold text-gray-800">{selecionadas}</span> de {preview.length} selecionadas
-        </p>
-        <div className="flex gap-2">
-          <button onClick={() => toggleTodas(true)} className="text-xs text-blue-500 hover:text-blue-700 font-medium">Selecionar todas</button>
-          <span className="text-gray-300">|</span>
-          <button onClick={() => toggleTodas(false)} className="text-xs text-gray-400 hover:text-gray-600 font-medium">Desmarcar</button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <p className="t-label" style={{ margin: 0 }}><b style={{ color: 'var(--text)' }}>{sel}</b> de {preview.length} selecionadas</p>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => toggleAll(true)} style={linkBtn}>Selecionar todas</button>
+          <span style={{ color: 'var(--border)' }}>|</span>
+          <button onClick={() => toggleAll(false)} style={linkBtn}>Desmarcar</button>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-gray-200">
-        <table className="w-full text-sm">
+      <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 8 }}>
+        <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-100">
-              <th className="px-3 py-3 text-left w-8"></th>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Data</th>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Descrição</th>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Categoria</th>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo</th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Valor</th>
+            <tr style={{ background: '#fafafa' }}>
+              <th style={{ width: 30, padding: 10 }}></th>
+              {['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor'].map((h, i) => (
+                <th key={h} className="t-th" style={{ padding: 10, textAlign: i === 4 ? 'right' : 'left', borderBottom: '1px solid var(--border)' }}>{h}</th>
+              ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
-            {preview.map((p, idx) => (
-              <tr
-                key={idx}
-                className={`transition-colors ${
-                  p.erro ? 'bg-red-50/50' : p.selecionada ? 'bg-white' : 'bg-gray-50/50 opacity-60'
-                }`}
-              >
-                <td className="px-3 py-2.5">
-                  <input
-                    type="checkbox"
-                    checked={p.selecionada}
-                    disabled={!!p.erro}
-                    onChange={() => toggleSelecionada(idx)}
-                    className="rounded accent-blue-500 cursor-pointer"
-                  />
+          <tbody>
+            {preview.map((p, i) => (
+              <tr key={i} style={{ borderBottom: '1px solid var(--border)', opacity: p.erro ? 0.6 : 1 }}>
+                <td style={{ padding: 8 }}>
+                  <input type="checkbox" checked={p.selecionada} disabled={!!p.erro} onChange={() => toggle(i)} />
                 </td>
-                <td className="px-3 py-2.5">
-                  <input
-                    type="date"
-                    value={p.data}
-                    onChange={(e) => atualizarCampo(idx, 'data', e.target.value)}
-                    className="border-0 bg-transparent text-xs text-gray-600 font-mono w-28 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded px-1"
-                  />
+                <td style={{ padding: 6 }}>
+                  <DateInput value={p.data} onChange={(v) => setCampo(i, 'data', v)} className="input" style={{ padding: '4px 8px', fontSize: 12 }} />
                 </td>
-                <td className="px-3 py-2.5">
-                  <input
-                    value={p.descricao}
-                    onChange={(e) => atualizarCampo(idx, 'descricao', e.target.value)}
-                    className="border-0 bg-transparent text-xs text-gray-800 w-full min-w-32 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded px-1"
-                  />
-                  {p.erro && (
-                    <div className="flex items-center gap-1 mt-1 text-xs text-red-500">
-                      <AlertCircle size={11} />
-                      {p.erro}
-                    </div>
-                  )}
+                <td style={{ padding: 6 }}>
+                  <input className="input" value={p.descricao} onChange={(e) => setCampo(i, 'descricao', e.target.value)} style={{ padding: '4px 8px', fontSize: 12 }} />
+                  {p.erro && <div style={{ display: 'flex', gap: 4, marginTop: 4, fontSize: 11, color: 'var(--neg)' }}><AlertCircle size={11} />{p.erro}</div>}
                 </td>
-                <td className="px-3 py-2.5">
-                  <select
-                    value={p.categoria}
-                    onChange={(e) => atualizarCampo(idx, 'categoria', e.target.value)}
-                    className="border-0 bg-transparent text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded px-1"
-                  >
-                    {categorias.map((c) => (
-                      <option key={c.id} value={c.nome}>{c.nome}</option>
-                    ))}
+                <td style={{ padding: 6 }}>
+                  <select className="input" value={p.categoria} onChange={(e) => setCampo(i, 'categoria', e.target.value)} style={{ padding: '4px 8px', fontSize: 12 }}>
+                    {categorias.map((c) => <option key={c.id} value={c.nome}>{c.nome}</option>)}
                   </select>
                 </td>
-                <td className="px-3 py-2.5">
-                  <select
-                    value={p.tipo}
-                    onChange={(e) => atualizarCampo(idx, 'tipo', e.target.value as 'receita' | 'despesa')}
-                    className="border-0 bg-transparent text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 rounded px-1"
-                    style={{ color: p.tipo === 'receita' ? '#10B981' : '#EF4444' }}
-                  >
+                <td style={{ padding: 6 }}>
+                  <select className="input" value={p.tipo} onChange={(e) => setCampo(i, 'tipo', e.target.value as 'receita' | 'despesa')}
+                    style={{ padding: '4px 8px', fontSize: 12, color: p.tipo === 'receita' ? 'var(--pos)' : 'var(--neg)' }}>
                     <option value="receita">Receita</option>
                     <option value="despesa">Despesa</option>
                   </select>
                 </td>
-                <td className="px-3 py-2.5 text-right">
-                  <span className={`text-xs font-mono font-semibold ${p.tipo === 'receita' ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {formatarMoeda(p.valor)}
-                  </span>
+                <td style={{ padding: 10, textAlign: 'right', fontWeight: 600, color: p.tipo === 'receita' ? 'var(--pos)' : 'var(--neg)' }}>
+                  {formatarMoeda(p.valor)}
                 </td>
               </tr>
             ))}
@@ -127,3 +83,5 @@ export function ImportPreviewTable({ preview, onChange }: ImportPreviewTableProp
     </div>
   );
 }
+
+const linkBtn: React.CSSProperties = { fontSize: 12, color: 'var(--text)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 };

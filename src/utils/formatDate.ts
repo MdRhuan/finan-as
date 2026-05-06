@@ -1,11 +1,17 @@
+// Formato canônico interno: ISO yyyy-mm-dd
+// Formato exibido sempre: dd/mm/aaaa
+
 export function formatarData(data: string): string {
-  const d = new Date(data + 'T00:00:00');
-  return new Intl.DateTimeFormat('pt-BR').format(d);
+  if (!data) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+    const [a, m, d] = data.split('-');
+    return `${d}/${m}/${a}`;
+  }
+  return data;
 }
 
 export function formatarDataCurta(data: string): string {
-  const d = new Date(data + 'T00:00:00');
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' }).format(d);
+  return formatarData(data);
 }
 
 export function formatarMes(mes: string): string {
@@ -15,42 +21,42 @@ export function formatarMes(mes: string): string {
 }
 
 export function mesAtual(): string {
-  const agora = new Date();
-  return `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+  const a = new Date();
+  return `${a.getFullYear()}-${String(a.getMonth() + 1).padStart(2, '0')}`;
 }
 
 export function dataHoje(): string {
-  const agora = new Date();
-  return `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+  const a = new Date();
+  return `${a.getFullYear()}-${String(a.getMonth() + 1).padStart(2, '0')}-${String(a.getDate()).padStart(2, '0')}`;
 }
 
+export function dataHojeBR(): string {
+  return formatarData(dataHoje());
+}
+
+// Aceita dd/mm/aaaa, dd-mm-aaaa, yyyy-mm-dd, dd/mm/yy
 export function normalizarData(raw: string): string {
   if (!raw) return dataHoje();
+  const s = raw.toString().trim();
 
-  // DD/MM/YYYY
-  const dmY = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  const dmY = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
   if (dmY) {
     const [, d, m, a] = dmY;
     const ano = a.length === 2 ? `20${a}` : a;
     return `${ano}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
 
-  // DD-MM-YYYY
-  const dmYh = raw.match(/^(\d{1,2})-(\d{1,2})-(\d{2,4})$/);
-  if (dmYh) {
-    const [, d, m, a] = dmYh;
-    const ano = a.length === 2 ? `20${a}` : a;
-    return `${ano}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-  }
-
-  // YYYY-MM-DD já está ok
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-
-  // Tenta parsear como data genérica
-  const d = new Date(raw);
+  const d = new Date(s);
   if (!isNaN(d.getTime())) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
-
   return dataHoje();
+}
+
+// Converte dd/mm/aaaa -> yyyy-mm-dd (ou retorna '' se inválido)
+export function brParaIso(br: string): string {
+  const m = br.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return '';
+  return `${m[3]}-${m[2]}-${m[1]}`;
 }
