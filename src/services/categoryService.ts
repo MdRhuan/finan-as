@@ -13,14 +13,13 @@ export const CATEGORIAS_PADRAO: Categoria[] = [
   { id: 'outros-receita', nome: 'Outros (Receita)', cor: '#059669', icone: '💵' },
 ];
 
-const CHAVE_LS = 'financeiro_categorias';
+import { chaveUsuario } from './auth';
 
 export function carregarCategorias(): Categoria[] {
   try {
-    const raw = localStorage.getItem(CHAVE_LS);
+    const raw = localStorage.getItem(chaveUsuario('categorias'));
     if (!raw) return CATEGORIAS_PADRAO;
     const salvas: Categoria[] = JSON.parse(raw);
-    // Merge: padrao + customizadas
     const ids = new Set(salvas.map((c) => c.id));
     const novas = CATEGORIAS_PADRAO.filter((c) => !ids.has(c.id));
     return [...salvas, ...novas];
@@ -30,7 +29,7 @@ export function carregarCategorias(): Categoria[] {
 }
 
 export function salvarCategorias(categorias: Categoria[]): void {
-  localStorage.setItem(CHAVE_LS, JSON.stringify(categorias));
+  localStorage.setItem(chaveUsuario('categorias'), JSON.stringify(categorias));
 }
 
 export function gerarIdCategoria(nome: string): string {

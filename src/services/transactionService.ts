@@ -1,10 +1,9 @@
 import type { Transacao, TipoTransacao } from '../types';
-
-const CHAVE_LS = 'financeiro_transacoes';
+import { chaveUsuario } from './auth';
 
 export function carregarTransacoes(): Transacao[] {
   try {
-    const raw = localStorage.getItem(CHAVE_LS);
+    const raw = localStorage.getItem(chaveUsuario('transacoes'));
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -12,7 +11,7 @@ export function carregarTransacoes(): Transacao[] {
 }
 
 export function salvarTransacoes(transacoes: Transacao[]): void {
-  localStorage.setItem(CHAVE_LS, JSON.stringify(transacoes));
+  localStorage.setItem(chaveUsuario('transacoes'), JSON.stringify(transacoes));
 }
 
 export function gerarId(): string {
@@ -69,7 +68,6 @@ export function gerarResumoMeses(transacoes: Transacao[], qtdMeses = 6) {
   const [anoInicio, mesInicio] = MES_INICIO.split('-').map(Number);
   const inicio = new Date(anoInicio, mesInicio - 1, 1);
   const agora = new Date();
-  // Referência: o mês mais recente entre hoje e o último mês com dados
   const ref = agora >= inicio ? agora : inicio;
   for (let i = 0; i < qtdMeses; i++) {
     const d = new Date(ref.getFullYear(), ref.getMonth() - i, 1);

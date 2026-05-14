@@ -2,45 +2,36 @@ import { create } from 'zustand';
 import type { Transacao, Categoria, Conta, Meta } from '../types';
 import { carregarTransacoes, salvarTransacoes, gerarId } from '../services/transactionService';
 import { carregarCategorias, salvarCategorias, CATEGORIAS_PADRAO } from '../services/categoryService';
+import { chaveUsuario, limparDadosUsuario } from '../services/auth';
 
-const CHAVE_CONTAS = 'financeiro_contas';
-const CHAVE_METAS = 'financeiro_metas';
+const SUFIXO_CONTAS = 'contas';
+const SUFIXO_METAS = 'metas';
 
-// Incrementar essa versão reseta todos os dados do localStorage
-const VERSAO_APP = '2';
-const CHAVE_VERSAO = 'financeiro_versao';
-
-function limparSeVersaoMudou() {
-  const versaoSalva = localStorage.getItem(CHAVE_VERSAO);
-  if (versaoSalva !== VERSAO_APP) {
-    ['financeiro_transacoes', 'financeiro_categorias', CHAVE_CONTAS, CHAVE_METAS].forEach(
-      (k) => localStorage.removeItem(k)
-    );
-    localStorage.setItem(CHAVE_VERSAO, VERSAO_APP);
-  }
-}
-
-limparSeVersaoMudou();
+const CONTAS_PADRAO: Conta[] = [
+  { id: 'banco', nome: 'Banco', tipo: 'banco', saldo: 0 },
+  { id: 'dinheiro', nome: 'Dinheiro', tipo: 'dinheiro', saldo: 0 },
+];
 
 function carregarContas(): Conta[] {
   try {
-    const raw = localStorage.getItem(CHAVE_CONTAS);
-    return raw ? JSON.parse(raw) : [
-      { id: 'banco', nome: 'Banco', tipo: 'banco', saldo: 0 },
-      { id: 'dinheiro', nome: 'Dinheiro', tipo: 'dinheiro', saldo: 0 },
-    ];
-  } catch { return []; }
+    const raw = localStorage.getItem(chaveUsuario(SUFIXO_CONTAS));
+    return raw ? JSON.parse(raw) : CONTAS_PADRAO;
+  } catch { return CONTAS_PADRAO; }
+}
+
+function salvarContas(contas: Conta[]) {
+  localStorage.setItem(chaveUsuario(SUFIXO_CONTAS), JSON.stringify(contas));
 }
 
 function carregarMetas(): Meta[] {
   try {
-    const raw = localStorage.getItem(CHAVE_METAS);
+    const raw = localStorage.getItem(chaveUsuario(SUFIXO_METAS));
     return raw ? JSON.parse(raw) : [];
   } catch { return []; }
 }
 
 function salvarMetas(metas: Meta[]): void {
-  localStorage.setItem(CHAVE_METAS, JSON.stringify(metas));
+  localStorage.setItem(chaveUsuario(SUFIXO_METAS), JSON.stringify(metas));
 }
 
 interface Estado {
@@ -50,31 +41,26 @@ interface Estado {
   metas: Meta[];
   mesSelecionado: string;
 
-  // Transações
   adicionarTransacao: (t: Omit<Transacao, 'id'>) => void;
   editarTransacao: (id: string, dados: Partial<Transacao>) => void;
   excluirTransacao: (id: string) => void;
   importarTransacoes: (ts: Omit<Transacao, 'id'>[]) => void;
 
-  // Categorias
   adicionarCategoria: (c: Omit<Categoria, 'id'> & { id?: string }) => void;
   excluirCategoria: (id: string) => void;
 
-  // Contas
   adicionarConta: (c: Omit<Conta, 'id'>) => void;
   excluirConta: (id: string) => void;
 
-  // Metas
   adicionarMeta: (m: Omit<Meta, 'id' | 'criadaEm' | 'concluida'>) => void;
   editarMeta: (id: string, dados: Partial<Meta>) => void;
   excluirMeta: (id: string) => void;
   depositarNaMeta: (id: string, valor: number) => void;
 
-  // Navegação
   setMesSelecionado: (mes: string) => void;
 
-  // Reset
-  resetarDados: () => void;
+  recarregar: () => void;
+  limparTudo: () => void;
 }
 
 export const useStore = create<Estado>((set, get) => ({
@@ -126,13 +112,13 @@ export const useStore = create<Estado>((set, get) => ({
   adicionarConta: (dados) => {
     const conta: Conta = { ...dados, id: `conta_${Date.now()}` };
     const contas = [...get().contas, conta];
-    localStorage.setItem(CHAVE_CONTAS, JSON.stringify(contas));
+    salvarContas(contas);
     set({ contas });
   },
 
   excluirConta: (id) => {
     const contas = get().contas.filter((c) => c.id !== id);
-    localStorage.setItem(CHAVE_CONTAS, JSON.stringify(contas));
+    salvarContas(contas);
     set({ contas });
   },
 
@@ -172,19 +158,20 @@ export const useStore = create<Estado>((set, get) => ({
 
   setMesSelecionado: (mes) => set({ mesSelecionado: mes }),
 
-  resetarDados: () => {
-    ['financeiro_transacoes', 'financeiro_categorias', CHAVE_CONTAS, CHAVE_METAS].forEach(
-      (k) => localStorage.removeItem(k)
-    );
+  recarregar: () => set({
+    transacoes: carregarTransacoes(),
+    categorias: carregarCategorias(),
+    contas: carregarContas(),
+    metas: carregarMetas(),
+  }),
+
+  limparTudo: () => {
+    limparDadosUsuario();
     set({
       transacoes: [],
       categorias: CATEGORIAS_PADRAO,
-      contas: [
-        { id: 'banco', nome: 'Banco', tipo: 'banco', saldo: 0 },
-        { id: 'dinheiro', nome: 'Dinheiro', tipo: 'dinheiro', saldo: 0 },
-      ],
+      contas: CONTAS_PADRAO,
       metas: [],
-      mesSelecionado: '2026-04',
     });
   },
 }));
