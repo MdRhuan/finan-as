@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ArrowLeftRight, Upload, BarChart3, Tag, Star, Calendar, TrendingUp, LogOut } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, Upload, BarChart3, Tag, Star, Calendar, TrendingUp, LogOut, Settings as SettingsIcon } from 'lucide-react';
 
 const links = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -9,11 +9,12 @@ const links = [
   { to: '/importar', icon: Upload, label: 'Importar' },
   { to: '/relatorios', icon: BarChart3, label: 'Relatórios' },
   { to: '/categorias', icon: Tag, label: 'Categorias' },
+  { to: '/configuracoes', icon: SettingsIcon, label: 'Configurações' },
 ];
 
-interface Props { onSair: () => void; }
+interface Props { onSair: () => void; usuario: string; }
 
-export function Navigation({ onSair }: Props) {
+export function Navigation({ onSair, usuario }: Props) {
   return (
     <>
       <aside
@@ -25,14 +26,14 @@ export function Navigation({ onSair }: Props) {
             <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--text)', color: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <TrendingUp size={18} />
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <span style={{ fontWeight: 700, fontSize: 16 }}>Financeiro</span>
-              <div className="t-label" style={{ marginTop: -2 }}>Personal finance</div>
+              <div className="t-label" style={{ marginTop: -2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{usuario}</div>
             </div>
           </div>
         </div>
 
-        <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' }}>
           {links.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
@@ -83,6 +84,13 @@ export function Navigation({ onSair }: Props) {
               <span style={{ fontSize: 10 }}>{label}</span>
             </NavLink>
           ))}
+          <button
+            onClick={onSair}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '6px 8px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}
+          >
+            <LogOut size={18} />
+            <span style={{ fontSize: 10 }}>Sair</span>
+          </button>
         </div>
       </nav>
     </>

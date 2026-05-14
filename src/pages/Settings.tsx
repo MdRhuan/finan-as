@@ -3,7 +3,7 @@ import { Trash2, Download, AlertTriangle, ChevronLeft, ChevronRight, FileSpreads
 import * as XLSX from 'xlsx';
 import { useStore } from '../store/useStore';
 import { filtrarPorMes } from '../services/transactionService';
-import { formatarMes, formatarDataBR } from '../utils/formatDate';
+import { formatarMes, formatarData } from '../utils/formatDate';
 import { usuarioAtual } from '../services/auth';
 
 function mudarMes(mes: string, delta: number) {
@@ -21,7 +21,7 @@ export function Settings() {
   const exportar = (formato: 'xlsx' | 'csv') => {
     const doMes = filtrarPorMes(transacoes, mesSelecionado);
     const linhas = doMes.map((t) => ({
-      Data: formatarDataBR(t.data),
+      Data: formatarData(t.data),
       Descrição: t.descricao,
       Valor: t.tipo === 'receita' ? t.valor : -t.valor,
       Tipo: t.tipo === 'receita' ? 'Receita' : 'Despesa',
