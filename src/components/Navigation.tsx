@@ -28,7 +28,7 @@ export function Navigation({ onSair, usuario }: Props) {
             </div>
             <div style={{ minWidth: 0 }}>
               <span style={{ fontWeight: 700, fontSize: 16 }}>Financeiro</span>
-              <div className="t-label" style={{ marginTop: -2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{usuario}</div>
+              <div className="t-label" style={{ marginTop: -2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={usuario}>{usuario}</div>
             </div>
           </div>
         </div>
