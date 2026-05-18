@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Navigation } from './components/Navigation';
 import { Login } from './components/Login';
@@ -10,24 +10,42 @@ import { Categories } from './pages/Categories';
 import { Goals } from './pages/Goals';
 import { CalendarPage } from './pages/Calendar';
 import { Settings } from './pages/Settings';
-import { usuarioAtual, logout } from './services/auth';
+import { aoMudarSessao, inicializarSessao, logout, usuarioAtual } from './services/auth';
 import { useStore } from './store/useStore';
 
 export default function App() {
   const [usuario, setUsuario] = useState<string | null>(usuarioAtual());
+  const [carregando, setCarregando] = useState(true);
   const recarregar = useStore((s) => s.recarregar);
 
-  const aoEntrar = () => {
-    recarregar();
-    setUsuario(usuarioAtual());
-  };
+  useEffect(() => {
+    // Listener PRIMEIRO, depois getSession (recomendação Supabase).
+    const unsub = aoMudarSessao((email) => {
+      setUsuario(email);
+      recarregar();
+    });
+    inicializarSessao().then((email) => {
+      setUsuario(email);
+      recarregar();
+      setCarregando(false);
+    });
+    return () => unsub();
+  }, [recarregar]);
 
-  const sair = () => {
-    logout();
+  const sair = async () => {
+    await logout();
     setUsuario(null);
   };
 
-  if (!usuario) return <Login onSucesso={aoEntrar} />;
+  if (carregando) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+        <p className="t-label">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!usuario) return <Login onSucesso={() => { /* listener atualizará o estado */ }} />;
 
   return (
     <BrowserRouter>
