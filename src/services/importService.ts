@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import type { PreviewImportacao, ResultadoImportacao, TipoTransacao } from '../types';
 import { normalizarData } from '../utils/formatDate';
 import { detectarCategoria, detectarTipoTransacao } from '../utils/detectCategory';
@@ -20,23 +20,46 @@ export async function parseCSV(arquivo: File): Promise<LinhaRaw[]> {
   });
 }
 
+function cellToString(v: unknown): string {
+  if (v == null) return '';
+  if (v instanceof Date) {
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d = String(v.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  if (typeof v === 'object') {
+    const obj = v as { text?: string; result?: unknown; richText?: Array<{ text: string }> };
+    if (obj.richText) return obj.richText.map((r) => r.text).join('');
+    if (obj.text != null) return String(obj.text);
+    if (obj.result != null) return String(obj.result);
+    return '';
+  }
+  return String(v);
+}
+
 export async function parseExcel(arquivo: File): Promise<LinhaRaw[]> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target!.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const linhas = XLSX.utils.sheet_to_json<LinhaRaw>(sheet, { raw: false, dateNF: 'yyyy-mm-dd' });
-        resolve(linhas);
-      } catch {
-        reject(new Error('Erro ao ler arquivo Excel'));
-      }
-    };
-    reader.onerror = () => reject(new Error('Falha ao carregar arquivo'));
-    reader.readAsArrayBuffer(arquivo);
+  const buffer = await arquivo.arrayBuffer();
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(buffer);
+  const ws = wb.worksheets[0];
+  if (!ws) throw new Error('Planilha vazia');
+
+  const rows: LinhaRaw[] = [];
+  let headers: string[] = [];
+  ws.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+    const values = row.values as unknown[];
+    if (rowNumber === 1) {
+      headers = values.slice(1).map((v) => cellToString(v).trim());
+    } else {
+      const obj: LinhaRaw = {};
+      headers.forEach((h, i) => {
+        if (h) obj[h] = cellToString(values[i + 1]);
+      });
+      rows.push(obj);
+    }
   });
+  return rows;
 }
 
 // ─── Mapeamento de colunas ────────────────────────────────────────────────────
