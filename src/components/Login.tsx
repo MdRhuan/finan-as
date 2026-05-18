@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Lock, TrendingUp, User, UserPlus } from "lucide-react";
-import { login, registrar, existeUsuario } from "../services/auth";
+import { Lock, TrendingUp, Mail, UserPlus, Loader2 } from "lucide-react";
+import { login, registrar } from "../services/auth";
 
 interface Props {
   onSucesso: () => void;
@@ -8,19 +8,20 @@ interface Props {
 
 export function Login({ onSucesso }: Props) {
   const [modo, setModo] = useState<"login" | "cadastro">("login");
-  const [usuario, setUsuario] = useState("");
+  const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCarregando(true);
+    setErro("");
     const fn = modo === "login" ? login : registrar;
-    const r = fn(usuario, senha);
-    if (r.ok) {
-      onSucesso();
-    } else {
-      setErro(r.erro || "Erro");
-    }
+    const r = await fn(email, senha);
+    setCarregando(false);
+    if (r.ok) onSucesso();
+    else setErro(r.erro || "Erro");
   };
 
   const alternar = () => {
@@ -62,15 +63,16 @@ export function Login({ onSucesso }: Props) {
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
             <label className="t-label" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <User size={12} /> Nome de usuário
+              <Mail size={12} /> Email
             </label>
             <input
-              type="text"
-              value={usuario}
-              onChange={(e) => { setUsuario(e.target.value); setErro(""); }}
-              placeholder="seu_usuario"
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setErro(""); }}
+              placeholder="voce@email.com"
               autoFocus
-              autoComplete="username"
+              autoComplete="email"
+              required
               className="input"
             />
           </div>
@@ -85,13 +87,19 @@ export function Login({ onSucesso }: Props) {
               onChange={(e) => { setSenha(e.target.value); setErro(""); }}
               placeholder="••••••••"
               autoComplete={modo === "login" ? "current-password" : "new-password"}
+              required
+              minLength={6}
               className="input"
             />
+            {modo === "cadastro" && (
+              <p className="t-label" style={{ marginTop: 4 }}>Mínimo de 6 caracteres.</p>
+            )}
           </div>
 
           {erro && <p style={{ fontSize: 12, color: "var(--neg)", margin: 0 }}>{erro}</p>}
 
-          <button type="submit" className="btn-primary" style={{ marginTop: 4 }}>
+          <button type="submit" className="btn-primary" disabled={carregando} style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+            {carregando && <Loader2 size={14} className="animate-spin" />}
             {modo === "login" ? "Entrar" : "Criar conta"}
           </button>
 
@@ -110,12 +118,6 @@ export function Login({ onSucesso }: Props) {
               <>Já tem conta? Entrar</>
             )}
           </button>
-
-          {modo === "login" && usuario && !existeUsuario(usuario) && (
-            <p className="t-label" style={{ margin: 0, textAlign: "center" }}>
-              Usuário não encontrado. Crie uma conta.
-            </p>
-          )}
         </form>
       </div>
     </div>
