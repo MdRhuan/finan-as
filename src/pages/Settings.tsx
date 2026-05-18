@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Trash2, Download, AlertTriangle, ChevronLeft, ChevronRight, FileSpreadsheet } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { useStore } from '../store/useStore';
 import { filtrarPorMes } from '../services/transactionService';
 import { formatarMes, formatarData } from '../utils/formatDate';
