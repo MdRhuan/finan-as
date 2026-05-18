@@ -18,7 +18,7 @@ export function Settings() {
   const [confirmText, setConfirmText] = useState('');
   const usuario = usuarioAtual();
 
-  const exportar = (formato: 'xlsx' | 'csv') => {
+  const exportar = async (formato: 'xlsx' | 'csv') => {
     const doMes = filtrarPorMes(transacoes, mesSelecionado);
     const linhas = doMes.map((t) => ({
       Data: formatarData(t.data),
@@ -27,19 +27,31 @@ export function Settings() {
       Tipo: t.tipo === 'receita' ? 'Receita' : 'Despesa',
       Categoria: t.categoria,
     }));
-    const ws = XLSX.utils.json_to_sheet(linhas);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, mesSelecionado);
     const nome = `financeiro_${usuario}_${mesSelecionado}.${formato}`;
+    const headers = ['Data', 'Descrição', 'Valor', 'Tipo', 'Categoria'] as const;
+
     if (formato === 'csv') {
-      const csv = XLSX.utils.sheet_to_csv(ws);
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const escape = (v: unknown) => {
+        const s = String(v ?? '');
+        return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const csv = [headers.join(','), ...linhas.map((l) => headers.map((h) => escape(l[h])).join(','))].join('\n');
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = nome; a.click();
       URL.revokeObjectURL(url);
     } else {
-      XLSX.writeFile(wb, nome);
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet(mesSelecionado);
+      ws.addRow(headers as unknown as string[]);
+      linhas.forEach((l) => ws.addRow(headers.map((h) => l[h])));
+      const buf = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = nome; a.click();
+      URL.revokeObjectURL(url);
     }
   };
 
