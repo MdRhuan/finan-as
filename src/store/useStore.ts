@@ -136,7 +136,7 @@ export const useStore = create<Estado>((set, get) => ({
     for (const k of ['tipo', 'valor', 'categoria', 'data', 'descricao', 'conta'] as const) {
       if (k in dados) patch[k] = dados[k] ?? null;
     }
-    const { error } = await supabase.from('transactions').update(patch).eq('id', id);
+    const { error } = await supabase.from('transactions').update(patch as never).eq('id', id);
     if (error) return;
     set({ transacoes: get().transacoes.map((t) => t.id === id ? { ...t, ...dados } : t) });
   },
