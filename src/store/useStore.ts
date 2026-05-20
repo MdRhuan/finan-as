@@ -214,7 +214,7 @@ export const useStore = create<Estado>((set, get) => ({
     if ('icone' in dados) patch.icone = dados.icone;
     if ('cor' in dados) patch.cor = dados.cor;
     if ('concluida' in dados) patch.concluida = dados.concluida;
-    const { error } = await supabase.from('goals').update(patch).eq('id', id);
+    const { error } = await supabase.from('goals').update(patch as never).eq('id', id);
     if (error) return;
     set({ metas: get().metas.map((m) => m.id === id ? { ...m, ...dados } : m) });
   },
