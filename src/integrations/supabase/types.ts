@@ -14,7 +14,150 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      accounts: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          saldo: number
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          nome: string
+          saldo?: number
+          tipo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          saldo?: number
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          cor: string
+          created_at: string
+          icone: string
+          id: string
+          nome: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cor: string
+          created_at?: string
+          icone: string
+          id: string
+          nome: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          icone?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          concluida: boolean
+          cor: string
+          created_at: string
+          descricao: string | null
+          icone: string
+          id: string
+          nome: string
+          prazo: string
+          updated_at: string
+          user_id: string
+          valor_alvo: number
+          valor_atual: number
+        }
+        Insert: {
+          concluida?: boolean
+          cor: string
+          created_at?: string
+          descricao?: string | null
+          icone: string
+          id?: string
+          nome: string
+          prazo: string
+          updated_at?: string
+          user_id: string
+          valor_alvo: number
+          valor_atual?: number
+        }
+        Update: {
+          concluida?: boolean
+          cor?: string
+          created_at?: string
+          descricao?: string | null
+          icone?: string
+          id?: string
+          nome?: string
+          prazo?: string
+          updated_at?: string
+          user_id?: string
+          valor_alvo?: number
+          valor_atual?: number
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          categoria: string
+          conta: string | null
+          created_at: string
+          data: string
+          descricao: string
+          id: string
+          tipo: string
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          categoria: string
+          conta?: string | null
+          created_at?: string
+          data: string
+          descricao: string
+          id?: string
+          tipo: string
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          categoria?: string
+          conta?: string | null
+          created_at?: string
+          data?: string
+          descricao?: string
+          id?: string
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
